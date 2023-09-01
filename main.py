@@ -17,7 +17,7 @@ def download_split_apks():
         results = result.split('\n')
         split_apks = []
         for r in results:
-            if len(r) > 0 and not r.__contains__('base.apk') and r.startswith("/data/"):  # base apk already copied
+            if len(r) > 0 and not r.__contains__('base.apk') and r.__contains__("/data/app/"):  # base apk already copied
                 path = r.split('package:')[1]
                 temp = path.split('/')
                 name = temp[len(temp) - 1]
@@ -77,7 +77,7 @@ def restore_apks():
                 print(result)
             else:
                 result = os.popen(
-                    'adb -s {0} install apks-{0}/{1}-{2}'.format(android_device, data['package'], data['name'])).read()
+                    'adb -s {0} install  -r -d --user 0 apks-{0}/{1}-{2}'.format(android_device, data['package'], data['name'])).read()
                 print(result)
 
 
