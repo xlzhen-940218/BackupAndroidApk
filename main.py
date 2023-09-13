@@ -17,7 +17,8 @@ def download_split_apks():
         results = result.split('\n')
         split_apks = []
         for r in results:
-            if len(r) > 0 and not r.__contains__('base.apk') and r.__contains__("/data/app/"):  # base apk already copied
+            if len(r) > 0 and not r.__contains__('base.apk') and r.__contains__(
+                    "/data/app/"):  # base apk already copied
                 path = r.split('package:')[1]
                 temp = path.split('/')
                 name = temp[len(temp) - 1]
@@ -46,16 +47,19 @@ def download_apks():
 
 
 def get_all_apks():
-    result = subprocess.check_output('adb -s {0} shell "pm list packages -f" '.format(android_device),
-                                     encoding='UTF-8')
+    result = subprocess.check_output(
+        'adb -s {0} shell "pm list packages -f --show-versioncode" '.format(android_device),
+        encoding='UTF-8')
     results = result.split('\n')
     for r in results:
         if len(r) > 0:
             package = r.split('apk=')[1]
+            version = package.split(':')[1]
+            package = package.split(' ')[0]
             path = r.split('={0}'.format(package))[0].split('package:')[1]
             name = path.split('/')
             name = name[len(name) - 1]
-            list_data.append({'package': package, 'path': path, 'name': name})
+            list_data.append({'package': package, 'path': path, 'name': name, 'version_code': version})
 
 
 def restore_apks():
@@ -66,8 +70,18 @@ def restore_apks():
     list_data = device_info['data']
     for data in list_data:
         exists_app = os.popen(
-            'adb -s {0} shell "pm list packages | grep {1}"'.format(android_device, data['package'])).read()
-        if not exists_app.__contains__(data['package']):
+            'adb -s {0} shell "pm list packages -f --show-versioncode | grep {1}"'.format(android_device,
+                                                                                       data['package'])).read()
+        if exists_app.__contains__('apk='):
+            package = exists_app.split('apk=')[1]
+            version = package.split(':')[1]
+            package = package.split(' ')[0]
+            print('exist app, package : {0} , version : {1}'.format(package, version))
+        else:
+            package = data['package']
+            version = '0'
+            print('not exist app,package : {0}'.format(package))
+        if not package.__eq__(data['package']) or int(data['version_code']) > int(version):
             if len(data['split']) > 0:
                 apk_paths = '"apks-{0}/{1}-{2}"'.format(android_device, data['package'], data['name'])
                 for s in data['split']:
@@ -77,7 +91,8 @@ def restore_apks():
                 print(result)
             else:
                 result = os.popen(
-                    'adb -s {0} install  -r -d --user 0 apks-{0}/{1}-{2}'.format(android_device, data['package'], data['name'])).read()
+                    'adb -s {0} install  -r -d --user 0 apks-{0}/{1}-{2}'.format(android_device, data['package'],
+                                                                                 data['name'])).read()
                 print(result)
 
 
