@@ -74,7 +74,7 @@ def restore_apks():
                                                                                        data['package'])).read()
         if exists_app.__contains__('apk='):
             package = exists_app.split('apk=')[1]
-            version = package.split(':')[1]
+            version = package.split(':')[1].split('\n')[0]
             package = package.split(' ')[0]
             print('exist app, package : {0} , version : {1}'.format(package, version))
         else:
